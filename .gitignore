@@ -1,3 +1,5 @@
 /backend/__pycache__
 /frontend/dist
 /frontend/node_modules
+backend/load_db.txt
+backend/database.db

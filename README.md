@@ -10,12 +10,19 @@ Please refer to "SCOPE.md" file for the explanation on what I built, what I defe
 - React
 - Vite
 - Typescript
+- SQLite 3
 
 ## AI Usage
 TODO
 
 ## What I would do next
 TODO
+
+## Pre-requisites
+- Install Python 3.14.6
+- Install python packages using the command "TODO"
+- Create the database using the "create_db.py" in the backend folder
+  - Optionally create a "load_db.txt" file using the example file provided
 
 ## Starting the application
 Just one line - "python .\backend\main.py"
