@@ -12,7 +12,7 @@ Regulatory And Licensing (RAL)
 Just one line - "python .\backend\main.py"
 
 ## Commits
-Do a "npm run format" at the end of every frontend change commit
+Do a "npm run format" in the frontend folder at the end of every frontend change commit
 
 ## Deployment
 Before starting the deployment pipeline, do the following in a staging folder on the preprod machine:
