@@ -11,7 +11,7 @@ from pydantic import BaseModel
 import sqlite3
 import configparser
 from fastapi.responses import FileResponse
-import os
+from datetime import datetime
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 FRONTEND_DIR = BASE_DIR / "frontend"
@@ -48,6 +48,8 @@ class RegisterRequest(BaseModel):
 class ChangePasswordRequest(BaseModel):
     oldPassword:str
     newPassword:str
+class NewInspectionRequest(BaseModel):
+    operator_email: str
 
 app = FastAPI()
 
@@ -123,6 +125,57 @@ def change_password(request:Request,data:ChangePasswordRequest):
     conn.close()
     return {"success":True}
 
+@app.get("/api/operators")
+def search_operators(query: str = ""):
+    conn = sqlite3.connect(DATABASE_PATH)
+    cur = conn.cursor()
+    cur.execute("SELECT email FROM users WHERE role = 'operator' AND email LIKE ?", ('%' + query + '%',))
+    operators = [row[0] for row in cur.fetchall()]
+    conn.close()
+    return {"operators": operators}
+
+@app.post("/api/inspections/new")
+def create_inspection(request: Request, data: NewInspectionRequest):
+    token = request.cookies.get("session")
+    if not token: return {"success": False}
+    user = serializer.loads(token)
+    conn = sqlite3.connect(DATABASE_PATH)
+    cur = conn.cursor()
+    cur.execute("SELECT 1 FROM inspections WHERE operator_email = ? AND end_date IS NULL", (data.operator_email,))
+    if cur.fetchone():
+        conn.close()
+        return {"success": False, "error": "active inspection found. unable to create new one"}
+    start_date = datetime.now().isoformat()
+    cur.execute("INSERT INTO inspections (operator_email, officer_email, start_date, end_date, checklist_form_json) VALUES (?, ?, ?, ?, ?)",(data.operator_email, user["email"], start_date, None, "{}"))
+    conn.commit()
+    conn.close()
+    return {"success": True}
+
+@app.get("/api/inspections/in-progress")
+def get_in_progress(request: Request):
+    token = request.cookies.get("session")
+    if not token: return {"inspections": [], "count": 0}
+    user = serializer.loads(token)
+    conn = sqlite3.connect(DATABASE_PATH)
+    cur = conn.cursor()
+    cur.execute("SELECT operator_email, start_date FROM inspections WHERE officer_email = ? AND end_date IS NULL",(user["email"],))
+    results = [{"operator_email": row[0], "start_date": row[1]} for row in cur.fetchall()]
+    conn.close()
+    return {"inspections": results, "count": len(results)}
+
+@app.get("/api/inspections/completed")
+def get_completed(request: Request):
+    token = request.cookies.get("session")
+    if not token: return {"inspections": [], "count": 0}
+    user = serializer.loads(token)
+    conn = sqlite3.connect(DATABASE_PATH)
+    cur = conn.cursor()
+    cur.execute("SELECT operator_email, start_date, end_date FROM inspections WHERE officer_email = ? AND end_date IS NOT NULL",(user["email"],))
+    results = [{"operator_email": row[0], "start_date": row[1], "end_date": row[2]} for row in cur.fetchall()]
+    conn.close()
+    return {"inspections": results, "count": len(results)}
+
+#the order for the below route is important, it should be the last one to avoid conflicts with other routes
 @app.get("/{path:path}")
 async def serve_react_app(path: str):
     file_path = DIST_DIR / path
