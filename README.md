@@ -2,7 +2,7 @@
 This is a Regulatory And Licensing (RAL) web application.
 
 ## Scope
-Please refer to "SCOPE.md" file for the explanation on what I built, what I deferred, and the reasons behind it.
+Please refer to "[SCOPE.md](SCOPE.md)" file for the explanation on what I built, what I deferred, and the reasons behind it.
 
 ## Stack
 - Python 3.14.6
