@@ -125,8 +125,15 @@ def change_password(request:Request,data:ChangePasswordRequest):
     conn.close()
     return {"success":True}
 
-@app.get("/api/operators")
-def search_operators(query: str = ""):
+@app.get("/api/officer/get-operators")
+def search_operators(request: Request, query: str = ""):
+    token = request.cookies.get("session")
+    if not token: 
+        return {"operators": []}
+    user = serializer.loads(token)
+    # Role validation: Ensure only officers can access this data
+    if user.get("role") != "officer":
+        return {"operators": []}
     conn = sqlite3.connect(DATABASE_PATH)
     cur = conn.cursor()
     cur.execute("SELECT email FROM users WHERE role = 'operator' AND email LIKE ?", ('%' + query + '%',))
@@ -134,7 +141,7 @@ def search_operators(query: str = ""):
     conn.close()
     return {"operators": operators}
 
-@app.post("/api/inspections/new")
+@app.post("/api/officer/inspections/new")
 def create_inspection(request: Request, data: NewInspectionRequest):
     token = request.cookies.get("session")
     if not token: return {"success": False}
@@ -157,7 +164,7 @@ def create_inspection(request: Request, data: NewInspectionRequest):
     conn.close()
     return {"success": True}
 
-@app.get("/api/inspections/in-progress")
+@app.get("/api/officer/inspections/in-progress")
 def get_in_progress(request: Request):
     token = request.cookies.get("session")
     if not token: return {"inspections": [], "count": 0}
@@ -169,7 +176,7 @@ def get_in_progress(request: Request):
     conn.close()
     return {"inspections": results, "count": len(results)}
 
-@app.get("/api/inspections/completed")
+@app.get("/api/officer/inspections/completed")
 def get_completed(request: Request):
     token = request.cookies.get("session")
     if not token: return {"inspections": [], "count": 0}
@@ -178,6 +185,32 @@ def get_completed(request: Request):
     cur = conn.cursor()
     cur.execute("SELECT operator_email, start_date, end_date FROM inspections WHERE officer_email = ? AND end_date IS NOT NULL",(user["email"],))
     results = [{"operator_email": row[0], "start_date": row[1], "end_date": row[2]} for row in cur.fetchall()]
+    conn.close()
+    return {"inspections": results, "count": len(results)}
+
+@app.get("/api/operator/inspections/in-progress")
+def get_operator_in_progress(request: Request):
+    token = request.cookies.get("session")
+    if not token:
+        return {"inspections": [], "count": 0}
+    user = serializer.loads(token)
+    conn = sqlite3.connect(DATABASE_PATH)
+    cur = conn.cursor()
+    cur.execute("SELECT officer_email, start_date FROM inspections WHERE operator_email = ? AND end_date IS NULL", (user["email"],))
+    results = [{"officer_email": row[0], "start_date": row[1]} for row in cur.fetchall()]
+    conn.close()
+    return {"inspections": results, "count": len(results)}
+
+@app.get("/api/operator/inspections/completed")
+def get_operator_completed(request: Request):
+    token = request.cookies.get("session")
+    if not token:
+        return {"inspections": [], "count": 0}
+    user = serializer.loads(token)
+    conn = sqlite3.connect(DATABASE_PATH)
+    cur = conn.cursor()
+    cur.execute("SELECT officer_email, start_date, end_date FROM inspections WHERE operator_email = ? AND end_date IS NOT NULL", (user["email"],))
+    results = [{"officer_email": row[0], "start_date": row[1], "end_date": row[2]} for row in cur.fetchall()]
     conn.close()
     return {"inspections": results, "count": len(results)}
 
