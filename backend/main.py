@@ -141,6 +141,12 @@ def create_inspection(request: Request, data: NewInspectionRequest):
     user = serializer.loads(token)
     conn = sqlite3.connect(DATABASE_PATH)
     cur = conn.cursor()
+    # Validation 1: Check if the operator actually exists in the users table
+    cur.execute("SELECT 1 FROM users WHERE email = ? AND role = 'operator'", (data.operator_email,))
+    if not cur.fetchone():
+        conn.close()
+        return {"success": False, "error": "Invalid operator email."}
+    # Validation 2: Check if the operator already has an active inspection
     cur.execute("SELECT 1 FROM inspections WHERE operator_email = ? AND end_date IS NULL", (data.operator_email,))
     if cur.fetchone():
         conn.close()

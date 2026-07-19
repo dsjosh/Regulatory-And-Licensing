@@ -30,7 +30,7 @@ export default function Navbar() {
         {/* Brand Logo / Left side */}
         <div className="flex items-center space-x-2">
           <div className="rounded-lg bg-indigo-600 flex items-center justify-center text-white font-black px-4 py-2.5 mx-2">
-            RAL Portal
+            Regulatory And Licensing
           </div>
           {name && <span className="text-slate-700 px-2 font-semibold">{name}</span>}
         </div>

@@ -62,7 +62,7 @@ export default function Login() {
           Login
         </h1>
         <p className="mt-2 text-center text-sm text-slate-500">
-          Access your Regulatory And Licensing (RAL) dashboard
+          Access your Regulatory And Licensing dashboard
         </p>
       </div>
 
