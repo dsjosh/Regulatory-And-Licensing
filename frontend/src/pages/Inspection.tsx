@@ -28,8 +28,85 @@ type InspectionData = {
 type DraftAnswer = {
   update: string;
   comment: string;
-};
 
+  filename: string;
+  mime: string;
+  base64: string;
+};
+const FILE_MARKER = "⟦FILE⟧";
+const TYPE_MARKER = "⟦TYPE⟧";
+const DATA_MARKER = "⟦DATA⟧";
+
+function parseComment(raw: string) {
+  if (!raw.includes(FILE_MARKER)) {
+    return {
+      text: raw,
+      filename: "",
+      mime: "",
+      data: ""
+    };
+  }
+
+  const fileIndex = raw.indexOf(FILE_MARKER);
+  const typeIndex = raw.indexOf(TYPE_MARKER);
+  const dataIndex = raw.indexOf(DATA_MARKER);
+
+  return {
+    text: raw.substring(0, fileIndex).trim(),
+    filename: raw.substring(fileIndex + FILE_MARKER.length, typeIndex).trim(),
+    mime: raw.substring(typeIndex + TYPE_MARKER.length, dataIndex).trim(),
+    data: raw.substring(dataIndex + DATA_MARKER.length).trim()
+  };
+}
+
+function buildComment(
+  text: string,
+  filename: string,
+  mime: string,
+  data: string
+) {
+  if (!filename)
+    return text;
+
+  return (
+    text.trim() +
+    "\n\n" +
+    FILE_MARKER +
+    filename +
+    "\n" +
+    TYPE_MARKER +
+    mime +
+    "\n" +
+    DATA_MARKER +
+    data
+  );
+}
+
+function downloadAttachment(
+  filename: string,
+  mime: string,
+  base64: string
+) {
+  const binary = atob(base64);
+
+  const bytes = new Uint8Array(binary.length);
+
+  for (let i = 0; i < binary.length; i++)
+    bytes[i] = binary.charCodeAt(i);
+
+  const blob = new Blob([bytes], { type: mime });
+
+  const url = URL.createObjectURL(blob);
+
+  const a = document.createElement("a");
+
+  a.href = url;
+  a.download = filename;
+
+  a.click();
+
+  URL.revokeObjectURL(url);
+}
 export default function Inspection() {
   const { inspectionId } = useParams();
   const nav = useNavigate();
@@ -52,21 +129,35 @@ export default function Inspection() {
     const loadedInspection: InspectionData = data.inspection;
     const nextDraft: Record<string, DraftAnswer> = {};
 
-    Object.keys(loadedInspection.questions).forEach((questionId) => {
-      const latestAnswer = loadedInspection.latest[questionId] || {};
+Object.keys(loadedInspection.questions).forEach((questionId) => {
 
-      if (loadedInspection.role === 'operator' && !loadedInspection.end_date) {
-        nextDraft[questionId] = {
-          update: 'pending',
-          comment: '',
-        };
-      } else {
-        nextDraft[questionId] = {
-          update: latestAnswer.update || '',
-          comment: latestAnswer.comment || '',
-        };
-      }
-    });
+  const latestAnswer = loadedInspection.latest[questionId] || {};
+
+  const parsed = parseComment(latestAnswer.comment || "");
+
+  if (loadedInspection.role === "operator" && !loadedInspection.end_date) {
+
+    nextDraft[questionId] = {
+      update: "pending",
+      comment: "",
+      filename: "",
+      mime: "",
+      base64: ""
+    };
+
+  } else {
+
+    nextDraft[questionId] = {
+      update: latestAnswer.update || "",
+      comment: parsed.text,
+      filename: parsed.filename,
+      mime: parsed.mime,
+      base64: parsed.data
+    };
+
+  }
+
+});
 
     setInspection(loadedInspection);
     setDraft(nextDraft);
@@ -101,23 +192,36 @@ export default function Inspection() {
   const saveInspection = async () => {
     setError('');
 
-    const answers: Record<string, DraftAnswer> = {};
+  const answers: Record<
+  string,
+  {
+    update: string;
+    comment: string;
+  }
+> = {};
 
-    Object.entries(draft).forEach(([questionId, answer]) => {
-      if (inspection?.role === 'operator') {
-        if (answer.comment.trim()) {
-          answers[questionId] = {
-            update: 'pending',
-            comment: answer.comment,
-          };
-        }
-      } else if (answer.update) {
-        answers[questionId] = {
-          update: answer.update,
-          comment: answer.comment,
-        };
-      }
-    });
+Object.entries(draft).forEach(([questionId, answer]) => {
+  const storedComment = buildComment(
+    answer.comment,
+    answer.filename,
+    answer.mime,
+    answer.base64
+  );
+
+  if (inspection?.role === 'operator') {
+    if (answer.comment.trim() || answer.filename) {
+      answers[questionId] = {
+        update: 'pending',
+        comment: storedComment,
+      };
+    }
+  } else if (answer.update) {
+    answers[questionId] = {
+      update: answer.update,
+      comment: storedComment,
+    };
+  }
+});
 
     const res = await fetch(`/api/inspection/${inspectionId}`, {
       method: 'POST',
@@ -248,11 +352,39 @@ export default function Inspection() {
                                 : entry.update || 'No result'}
                             </div>
 
-                            {entry.comment && (
-                              <div className="mt-1 text-sm whitespace-pre-wrap">
-                                {entry.comment}
-                              </div>
-                            )}
+                          {(() => {
+
+  const parsed = parseComment(entry.comment || "");
+
+  return (
+    <>
+
+      {parsed.text && (
+        <div className="mt-1 text-sm whitespace-pre-wrap">
+          {parsed.text}
+        </div>
+      )}
+
+      {parsed.filename && (
+        <button
+          type="button"
+          className="mt-2 text-blue-600 underline text-sm"
+          onClick={() =>
+            downloadAttachment(
+              parsed.filename,
+              parsed.mime,
+              parsed.data
+            )
+          }
+        >
+          📎 Attached: {parsed.filename}
+        </button>
+      )}
+
+    </>
+  );
+
+})()}
 
                             {entry.date && (
                               <div className="mt-2 text-xs text-slate-400">{entry.date}</div>
@@ -298,20 +430,93 @@ export default function Inspection() {
                         </select>
                       )}
 
-                      <textarea
-                        className="border p-2 rounded w-full min-h-24"
-                        placeholder="Comment"
-                        value={answerDraft.comment}
-                        onChange={(e) =>
-                          setDraft((current) => ({
-                            ...current,
-                            [questionId]: {
-                              ...current[questionId],
-                              comment: e.target.value,
-                            },
-                          }))
-                        }
-                      />
+                   <>
+  <textarea
+    className="border p-2 rounded w-full min-h-24"
+    placeholder="Comment"
+    value={answerDraft.comment}
+    onChange={(e) =>
+      setDraft((current) => ({
+        ...current,
+        [questionId]: {
+          ...current[questionId],
+          comment: e.target.value,
+        },
+      }))
+    }
+  />
+
+  <input
+    type="file"
+    className="border p-2 rounded w-full"
+    onChange={(e) => {
+
+      const file = e.target.files?.[0];
+
+      if (!file)
+        return;
+
+      if (file.size > 1024 * 1024) {
+        alert("Maximum attachment size is 1 MB");
+        return;
+      }
+
+      const reader = new FileReader();
+
+      reader.onload = () => {
+
+        const base64 = (reader.result as string).split(",")[1];
+
+        setDraft((current) => ({
+          ...current,
+          [questionId]: {
+            ...current[questionId],
+            filename: file.name,
+            mime: file.type,
+            base64: base64,
+          },
+        }));
+
+      };
+
+      reader.readAsDataURL(file);
+
+    }}
+  />
+
+  {answerDraft.filename && (
+
+    <div className="text-sm text-slate-600">
+
+      📎 Attached: {answerDraft.filename}
+
+    </div>
+
+  )}
+
+  {answerDraft.filename && (
+
+    <button
+      type="button"
+      className="text-red-600 underline text-sm"
+      onClick={() =>
+        setDraft((current) => ({
+          ...current,
+          [questionId]: {
+            ...current[questionId],
+            filename: "",
+            mime: "",
+            base64: "",
+          },
+        }))
+      }
+    >
+      Remove attachment
+    </button>
+
+  )}
+
+</>
                     </div>
                   ) : (
                     <div className="border rounded p-3 bg-slate-100 text-slate-500">
@@ -322,9 +527,39 @@ export default function Inspection() {
                           : latestAnswer.update || 'Not answered'}
                       </div>
 
-                      {latestAnswer.comment && (
-                        <div className="mt-1 whitespace-pre-wrap">{latestAnswer.comment}</div>
-                      )}
+                  {(() => {
+
+  const parsed = parseComment(latestAnswer.comment || "");
+
+  return (
+    <>
+
+      {parsed.text && (
+        <div className="mt-1 whitespace-pre-wrap">
+          {parsed.text}
+        </div>
+      )}
+
+      {parsed.filename && (
+        <button
+          type="button"
+          className="mt-2 text-blue-600 underline"
+          onClick={() =>
+            downloadAttachment(
+              parsed.filename,
+              parsed.mime,
+              parsed.data
+            )
+          }
+        >
+          📎 Attached: {parsed.filename}
+        </button>
+      )}
+
+    </>
+  );
+
+})()}
                     </div>
                   )}
                 </section>
