@@ -3,5 +3,5 @@
 # python -c "from passlib.hash import bcrypt; print(bcrypt.hash('mypassword'));"
 # The default passwords in the 2 hashes below is "test".
 
-INSERT INTO users (email,password_hash,role) VALUES ('officer@test.com','$2b$12$VysPA1rpRMBCdkELzlqCEuOV7aknO6xfrbFytkd7XANfmwRMv7.We','officer');
-INSERT INTO users (email,password_hash,role) VALUES ('operator@test.com','$2b$12$7wSzO.TFD8R5Ph3wQ.wBve3R0RWsROj8Ny1AFLOjbV/iJn7n8EYlO','operator');
+INSERT INTO users (name,email,password_hash,role) VALUES ('Harry','officer@test.com','$2b$12$VysPA1rpRMBCdkELzlqCEuOV7aknO6xfrbFytkd7XANfmwRMv7.We','officer');
+INSERT INTO users (name,email,password_hash,role) VALUES ('Tom','operator@test.com','$2b$12$7wSzO.TFD8R5Ph3wQ.wBve3R0RWsROj8Ny1AFLOjbV/iJn7n8EYlO','operator');

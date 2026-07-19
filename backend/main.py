@@ -42,6 +42,7 @@ class LoginRequest(BaseModel):
     email: str
     password: str
 class RegisterRequest(BaseModel):
+    name: str  # Add this field
     email: str
     password: str
 class ChangePasswordRequest(BaseModel):
@@ -56,7 +57,7 @@ def login(data: LoginRequest):
         return {"success": False}
     conn = sqlite3.connect(DATABASE_PATH)
     cur = conn.cursor()
-    cur.execute("SELECT password_hash, role FROM users WHERE email=?",(data.email,))
+    cur.execute("SELECT password_hash, role, name FROM users WHERE email=?",(data.email,))
     row = cur.fetchone()
     conn.close()
     if row is None:
@@ -64,7 +65,7 @@ def login(data: LoginRequest):
     if not bcrypt.verify(data.password, row[0]):
         return {"success": False}
     response = JSONResponse({"success": True})
-    token = serializer.dumps({"email": data.email,"role": row[1]})
+    token = serializer.dumps({"email": data.email, "role": row[1], "name": row[2]})
     response.set_cookie(key="session",value=token,httponly=True,samesite="lax")
     return response
 
@@ -76,7 +77,7 @@ def register(data: RegisterRequest):
     if cur.fetchone():
         conn.close()
         return {"success": False}
-    cur.execute("INSERT INTO users(email,password_hash,role) VALUES(?,?,?)",(data.email,bcrypt.hash(data.password),"operator"))
+    cur.execute("INSERT INTO users(name,email,password_hash,role) VALUES(?,?,?,?)",(data.name,data.email,bcrypt.hash(data.password),"operator"))
     conn.commit()
     conn.close()
     return {"success": True}
@@ -96,7 +97,7 @@ def session(request: Request):
         user = serializer.loads(token)
     except BadSignature:
         return {"loggedIn": False}
-    return {"loggedIn": True,"email": user["email"],"role": user["role"]}
+    return {"loggedIn": True,"email": user["email"],"role": user["role"],"name": user["name"]}
 
 @app.post("/api/change-password")
 def change_password(request:Request,data:ChangePasswordRequest):

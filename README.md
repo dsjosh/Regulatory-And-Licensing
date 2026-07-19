@@ -10,6 +10,7 @@ Please refer to "SCOPE.md" file for the explanation on what I built, what I defe
 - React
 - Vite
 - Typescript
+- Tailwind v4
 - SQLite 3
 
 ## AI Usage

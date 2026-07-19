@@ -30,7 +30,7 @@ def init_database():
         
         print("[*] Applying structural DDL schema statements...")
         cursor.execute("PRAGMA foreign_keys = ON;")
-        cursor.execute("CREATE TABLE users (user_id INTEGER PRIMARY KEY AUTOINCREMENT,email TEXT NOT NULL UNIQUE,password_hash TEXT NOT NULL,role TEXT NOT NULL CHECK(role IN ('officer','operator')),created_at TEXT DEFAULT CURRENT_TIMESTAMP);")
+        cursor.execute("CREATE TABLE users (user_id INTEGER PRIMARY KEY AUTOINCREMENT,name TEXT NOT NULL,email TEXT NOT NULL UNIQUE,password_hash TEXT NOT NULL,role TEXT NOT NULL CHECK(role IN ('officer','operator')),created_at TEXT DEFAULT CURRENT_TIMESTAMP);")
         print("[+] Core tables and structural indices created successfully.")
         
         print(f"[*] Checking for data seed file at: {data_file_path}")
