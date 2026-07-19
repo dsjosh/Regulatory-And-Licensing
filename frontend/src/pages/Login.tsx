@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 
 export default function Login() {
@@ -6,6 +6,21 @@ export default function Login() {
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+
+useEffect(() => {
+    async function checkSession() {
+
+        const res = await fetch("/api/session");
+        const data = await res.json();
+
+        if (data.loggedIn) {
+            void nav("/home");
+        }
+
+    }
+
+    void checkSession();
+}, [nav]);
 
   function isValidEmail(email: string) {
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);

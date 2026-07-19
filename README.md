@@ -21,8 +21,9 @@ TODO
 ## Pre-requisites
 - Install Python 3.14.6
 - Install python packages using the command "TODO"
-- Create the database using the "create_db.py" in the backend folder
-  - Optionally create a "load_db.txt" file using the example file provided
+- Create a blank database with RAL schema using the "create_db.py" in the backend folder
+  - Optionally create and fill up "load_db.txt" file using the example file provided in the backend folder to create a database with data
+- Create the "env.txt" file using the example file provided in the backend folder
 
 ## Starting the application
 Just one line - "python .\backend\main.py"

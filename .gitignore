@@ -3,3 +3,4 @@
 /frontend/node_modules
 backend/load_db.txt
 backend/database.db
+backend/env.txt
