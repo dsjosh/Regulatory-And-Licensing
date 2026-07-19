@@ -121,8 +121,6 @@ export default function Inspection() {
     Object.keys(loadedInspection.questions).forEach((questionId) => {
       const latestAnswer = loadedInspection.latest[questionId] || {};
 
-      const parsed = parseComment(latestAnswer.comment || '');
-
       if (loadedInspection.role === 'operator' && !loadedInspection.end_date) {
         nextDraft[questionId] = {
           update: 'pending',
@@ -134,10 +132,10 @@ export default function Inspection() {
       } else {
         nextDraft[questionId] = {
           update: latestAnswer.update || '',
-          comment: parsed.text,
-          filename: parsed.filename,
-          mime: parsed.mime,
-          base64: parsed.data,
+          comment: '',
+          filename: '',
+          mime: '',
+          base64: '',
         };
       }
     });
