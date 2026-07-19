@@ -7,7 +7,7 @@ export default function Home() {
   const [user, setUser] = useState<{ name: string; role: string; email: string } | null>(null);
 
   const [activeTab, setActiveTab] = useState(1);
-  
+
   // Tab 1 state (Officer specific)
   const [allOperators, setAllOperators] = useState<string[]>([]);
   const [operatorSearch, setOperatorSearch] = useState('');
@@ -33,7 +33,7 @@ export default function Home() {
         setUser({
           name: data.name,
           role: data.role,
-          email: data.email
+          email: data.email,
         });
         if (data.role === 'officer') {
           void fetchAllOperators();
@@ -50,7 +50,7 @@ export default function Home() {
   }, [nav]);
 
   const fetchAllOperators = async () => {
-    const res = await fetch('/api/officer/get-operators'); 
+    const res = await fetch('/api/officer/get-operators');
     const data = await res.json();
     setAllOperators(data.operators);
   };
@@ -58,21 +58,21 @@ export default function Home() {
   const startInspection = async () => {
     if (!operatorSearch) return;
 
-    if (inProgressList.some(insp => insp.operator_email === operatorSearch)) {
-      alert("active inspection found. unable to create new one");
+    if (inProgressList.some((insp) => insp.operator_email === operatorSearch)) {
+      alert('active inspection found. unable to create new one');
       return;
     }
 
     const res = await fetch('/api/officer/inspections/new', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ operator_email: operatorSearch })
+      body: JSON.stringify({ operator_email: operatorSearch }),
     });
-    
+
     const data = await res.json();
-    
+
     if (!data.success) {
-      alert(data.error || "Failed to start inspection");
+      alert(data.error || 'Failed to start inspection');
       return;
     }
 
@@ -127,33 +127,48 @@ export default function Home() {
           {user?.role === 'officer' && (
             <div className="mt-8 text-left border-t pt-8">
               <div className="flex gap-4 mb-6">
-                <button className={`px-4 py-2 rounded ${activeTab === 1 ? 'bg-indigo-600 text-white' : 'bg-slate-100'}`} onClick={() => setActiveTab(1)}>New</button>
-                <button className={`px-4 py-2 rounded ${activeTab === 2 ? 'bg-indigo-600 text-white' : 'bg-slate-100'}`} onClick={() => setActiveTab(2)}>In-Progress</button>
-                <button className={`px-4 py-2 rounded ${activeTab === 3 ? 'bg-indigo-600 text-white' : 'bg-slate-100'}`} onClick={() => setActiveTab(3)}>Completed</button>
+                <button
+                  className={`px-4 py-2 rounded ${activeTab === 1 ? 'bg-indigo-600 text-white' : 'bg-slate-100'}`}
+                  onClick={() => setActiveTab(1)}
+                >
+                  New
+                </button>
+                <button
+                  className={`px-4 py-2 rounded ${activeTab === 2 ? 'bg-indigo-600 text-white' : 'bg-slate-100'}`}
+                  onClick={() => setActiveTab(2)}
+                >
+                  In-Progress
+                </button>
+                <button
+                  className={`px-4 py-2 rounded ${activeTab === 3 ? 'bg-indigo-600 text-white' : 'bg-slate-100'}`}
+                  onClick={() => setActiveTab(3)}
+                >
+                  Completed
+                </button>
               </div>
 
               {activeTab === 1 && (
                 <div className="space-y-4">
                   <div className="relative">
-                    <input 
-                      type="text" 
-                      placeholder="Search operator email..." 
-                      className="border p-2 rounded w-full" 
-                      value={operatorSearch} 
+                    <input
+                      type="text"
+                      placeholder="Search operator email..."
+                      className="border p-2 rounded w-full"
+                      value={operatorSearch}
                       onChange={(e) => {
                         setOperatorSearch(e.target.value);
                         setShowDropdown(true);
-                      }} 
+                      }}
                       onFocus={() => setShowDropdown(true)}
-                      onBlur={() => setTimeout(() => setShowDropdown(false), 200)} 
+                      onBlur={() => setTimeout(() => setShowDropdown(false), 200)}
                     />
                     {showDropdown && (
                       <ul className="absolute z-10 bg-white border border-slate-200 rounded w-full mt-1 max-h-48 overflow-y-auto shadow-lg">
                         {allOperators
-                          .filter(op => op.toLowerCase().includes(operatorSearch.toLowerCase()))
-                          .map(op => (
-                            <li 
-                              key={op} 
+                          .filter((op) => op.toLowerCase().includes(operatorSearch.toLowerCase()))
+                          .map((op) => (
+                            <li
+                              key={op}
                               className="p-2 hover:bg-indigo-100 cursor-pointer"
                               onClick={() => {
                                 setOperatorSearch(op);
@@ -162,16 +177,18 @@ export default function Home() {
                             >
                               {op}
                             </li>
-                        ))}
-                        {allOperators.filter(op => op.toLowerCase().includes(operatorSearch.toLowerCase())).length === 0 && (
+                          ))}
+                        {allOperators.filter((op) =>
+                          op.toLowerCase().includes(operatorSearch.toLowerCase())
+                        ).length === 0 && (
                           <li className="p-2 text-slate-500">No operators found</li>
                         )}
                       </ul>
                     )}
                   </div>
-                  
-                  <button 
-                    onClick={startInspection} 
+
+                  <button
+                    onClick={startInspection}
                     className="bg-indigo-600 text-white px-6 py-2 rounded disabled:opacity-50 cursor-not-allowed disabled:bg-slate-400"
                     disabled={!allOperators.includes(operatorSearch)}
                   >
@@ -182,27 +199,52 @@ export default function Home() {
 
               {activeTab === 2 && (
                 <div className="space-y-4">
-                  <div className="font-semibold text-slate-600">Total In-Progress: {inProgressCount}</div>
-                  <input type="text" placeholder="Filter by operator email" className="border p-2 rounded w-full" value={inProgressSearch} onChange={(e) => setInProgressSearch(e.target.value)} />
+                  <div className="font-semibold text-slate-600">
+                    Total In-Progress: {inProgressCount}
+                  </div>
+                  <input
+                    type="text"
+                    placeholder="Filter by operator email"
+                    className="border p-2 rounded w-full"
+                    value={inProgressSearch}
+                    onChange={(e) => setInProgressSearch(e.target.value)}
+                  />
                   <div className="max-h-64 overflow-y-auto space-y-2">
-                    {inProgressList.filter(insp => insp.operator_email?.toLowerCase().includes(inProgressSearch.toLowerCase())).map((insp, idx) => (
-                      <div key={idx} className="p-3 border rounded bg-slate-50">
-                        <span className="font-semibold">{insp.operator_email}</span>
-                        <div className="text-sm text-slate-500">Started: {insp.start_date}</div>
-                      </div>
-                    ))}
+                    {inProgressList
+                      .filter((insp) =>
+                        insp.operator_email?.toLowerCase().includes(inProgressSearch.toLowerCase())
+                      )
+                      .map((insp, idx) => (
+                        <div key={idx} className="p-3 border rounded bg-slate-50">
+                          <span className="font-semibold">{insp.operator_email}</span>
+                          <div className="text-sm text-slate-500">Started: {insp.start_date}</div>
+                        </div>
+                      ))}
                   </div>
                 </div>
               )}
 
               {activeTab === 3 && (
                 <div className="space-y-4">
-                  <div className="font-semibold text-slate-600">Total Completed: {completedCount}</div>
-                  <input type="text" list="completed-options" placeholder="Search completed operator emails" className="border p-2 rounded w-full" value={completedSearch} onChange={(e) => setCompletedSearch(e.target.value)} />
+                  <div className="font-semibold text-slate-600">
+                    Total Completed: {completedCount}
+                  </div>
+                  <input
+                    type="text"
+                    list="completed-options"
+                    placeholder="Search completed operator emails"
+                    className="border p-2 rounded w-full"
+                    value={completedSearch}
+                    onChange={(e) => setCompletedSearch(e.target.value)}
+                  />
                   <datalist id="completed-options">
-                    {completedList.filter(insp => insp.operator_email?.toLowerCase().includes(completedSearch.toLowerCase())).map((insp, idx) => (
-                      <option key={idx} value={insp.operator_email} />
-                    ))}
+                    {completedList
+                      .filter((insp) =>
+                        insp.operator_email?.toLowerCase().includes(completedSearch.toLowerCase())
+                      )
+                      .map((insp, idx) => (
+                        <option key={idx} value={insp.operator_email} />
+                      ))}
                   </datalist>
                 </div>
               )}
@@ -211,45 +253,55 @@ export default function Home() {
 
           {/* OPERATOR VIEW */}
           {user?.role === 'operator' && (
-             <div className="mt-8 text-left border-t pt-8">
-               <div className="flex gap-4 mb-6">
-                 <button className={`px-4 py-2 rounded ${activeTab === 1 ? 'bg-indigo-600 text-white' : 'bg-slate-100'}`} onClick={() => setActiveTab(1)}>In-Progress</button>
-                 <button className={`px-4 py-2 rounded ${activeTab === 2 ? 'bg-indigo-600 text-white' : 'bg-slate-100'}`} onClick={() => setActiveTab(2)}>Completed</button>
-               </div>
+            <div className="mt-8 text-left border-t pt-8">
+              <div className="flex gap-4 mb-6">
+                <button
+                  className={`px-4 py-2 rounded ${activeTab === 1 ? 'bg-indigo-600 text-white' : 'bg-slate-100'}`}
+                  onClick={() => setActiveTab(1)}
+                >
+                  In-Progress
+                </button>
+                <button
+                  className={`px-4 py-2 rounded ${activeTab === 2 ? 'bg-indigo-600 text-white' : 'bg-slate-100'}`}
+                  onClick={() => setActiveTab(2)}
+                >
+                  Completed
+                </button>
+              </div>
 
-               {activeTab === 1 && (
-                 <div className="space-y-4">
-                   <div className="font-semibold text-slate-600">Total In-Progress: {inProgressCount}</div>
-                   <div className="max-h-64 overflow-y-auto space-y-2">
-                     {inProgressList.map((insp, idx) => (
-                       <div key={idx} className="p-3 border rounded bg-slate-50">
-                         <span className="font-semibold">{insp.officer_email}</span>
-                         <div className="text-sm text-slate-500">Started: {insp.start_date}</div>
-                       </div>
-                     ))}
-                   </div>
-                 </div>
-               )}
+              {activeTab === 1 && (
+                <div className="space-y-4">
+                  <div className="font-semibold text-slate-600">
+                    Total In-Progress: {inProgressCount}
+                  </div>
+                  <div className="max-h-64 overflow-y-auto space-y-2">
+                    {inProgressList.map((insp, idx) => (
+                      <div key={idx} className="p-3 border rounded bg-slate-50">
+                        <span className="font-semibold">{insp.officer_email}</span>
+                        <div className="text-sm text-slate-500">Started: {insp.start_date}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
 
-               {activeTab === 2 && (
-                 <div className="space-y-4">
-                   <div className="font-semibold text-slate-600">Total Completed: {completedCount}</div>
-<div className="max-h-64 overflow-y-auto space-y-2">
-  {completedList.map((insp, idx) => (
-    <div key={idx} className="p-3 border rounded bg-slate-50">
-      <span className="font-semibold">{insp.officer_email}</span>
-      <div className="text-sm text-slate-500">
-        Started: {insp.start_date}
-      </div>
-      <div className="text-sm text-slate-500">
-        Completed: {insp.end_date}
-      </div>
-    </div>
-  ))}
-</div>
-                 </div>
-               )}
-             </div>
+              {activeTab === 2 && (
+                <div className="space-y-4">
+                  <div className="font-semibold text-slate-600">
+                    Total Completed: {completedCount}
+                  </div>
+                  <div className="max-h-64 overflow-y-auto space-y-2">
+                    {completedList.map((insp, idx) => (
+                      <div key={idx} className="p-3 border rounded bg-slate-50">
+                        <span className="font-semibold">{insp.officer_email}</span>
+                        <div className="text-sm text-slate-500">Started: {insp.start_date}</div>
+                        <div className="text-sm text-slate-500">Completed: {insp.end_date}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
           )}
         </div>
       </main>
