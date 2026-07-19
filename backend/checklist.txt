@@ -1,0 +1,6 @@
+[checklist]
+1 = Is the electrical wiring colour coded to Singapore standards?
+2 = Is the wire gauge suitable for the expected power draw?
+3 = Are there fuses at every outlet?
+4 = Is there any exposed wiring?
+5 = Are high-voltage and low-voltage wiring separated?

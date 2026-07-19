@@ -340,13 +340,14 @@ export default function Home() {
                     {completedList.map((insp) => (
                       <div
                         key={insp.inspection_id}
-                        className="p-3 border rounded bg-slate-50 cursor-pointer hover:bg-indigo-50"
-                        onClick={() => void nav(`/inspection/${insp.inspection_id}`)}
+                        className="p-3 border rounded bg-slate-50 cursor-default"
                       >
                         <span className="font-semibold">
                           {insp.officer_email} - {inspectionResults[insp.inspection_id] ?? ''}
                         </span>
+
                         <div className="text-sm text-slate-500">Started: {insp.start_date}</div>
+
                         <div className="text-sm text-slate-500">Completed: {insp.end_date}</div>
                       </div>
                     ))}

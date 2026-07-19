@@ -263,7 +263,9 @@ export default function Inspection() {
         <div className="bg-white rounded-3xl p-8 shadow-xl border border-slate-100">
           <div className="flex justify-between items-start gap-4 mb-8">
             <div>
-              <h1 className="text-3xl font-bold">Inspection #{inspection.inspection_id}</h1>
+              <h1 className="text-3xl font-bold">
+                Checklist for Inspection #{inspection.inspection_id}
+              </h1>
 
               <div className="text-sm text-slate-500 mt-3 space-y-1">
                 <div>Officer: {inspection.officer_email}</div>

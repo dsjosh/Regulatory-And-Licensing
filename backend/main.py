@@ -22,8 +22,10 @@ config = configparser.ConfigParser()
 config.read(BASE_DIR / "backend" / "env.txt")
 SECRET_KEY = config["security"]["SECRET_KEY"]
 serializer = URLSafeSerializer(SECRET_KEY)
-EMPTY_INSPECTION_FORM = [{"1": {}, "2": {}, "3": {}, "4": {}, "5": {}}]
-INSPECTION_QUESTIONS = {"1": "Is the electrical wiring colour coded to Singapore standards?","2": "Is the wire gauge suitable for the expected power draw?","3": "Are there fuses at every outlet?","4": "Is there any exposed wiring?","5": "Are high-voltage and low-voltage wiring separated?"}
+checklist_config = configparser.ConfigParser()
+checklist_config.read(BASE_DIR / "backend" / "checklist.txt")
+INSPECTION_CHECKLIST_ITEMS = dict(checklist_config["checklist"])
+EMPTY_INSPECTION_FORM = [{question_id: {} for question_id in INSPECTION_CHECKLIST_ITEMS}]
 
 startup_choice = input("Rebuild React frontend? (y/n): ").strip().lower()
 
@@ -270,9 +272,9 @@ def get_inspection(inspection_id: int, request: Request):
     is_complete = row[4] is not None
     if user["role"] == "operator" and not is_complete:
         if row[5] == "operator":
-            visible_question_ids = [question_id for question_id in INSPECTION_QUESTIONS if isinstance(latest.get(question_id), dict) and latest.get(question_id, {}).get("update") == "pending"]
+            visible_question_ids = [question_id for question_id in INSPECTION_CHECKLIST_ITEMS if isinstance(latest.get(question_id), dict) and latest.get(question_id, {}).get("update") == "pending"]
             visible_audit_log = [{question_id: entry.get(question_id, {}) for question_id in visible_question_ids} for entry in audit_log]
-            visible_questions = {question_id: INSPECTION_QUESTIONS[question_id] for question_id in visible_question_ids}
+            visible_questions = {question_id: INSPECTION_CHECKLIST_ITEMS[question_id] for question_id in visible_question_ids}
             visible_latest = {question_id: latest.get(question_id, {}) for question_id in visible_question_ids}
         else:
             visible_audit_log = []
@@ -280,7 +282,7 @@ def get_inspection(inspection_id: int, request: Request):
             visible_latest = {}
     else:
         visible_audit_log = audit_log
-        visible_questions = INSPECTION_QUESTIONS
+        visible_questions = INSPECTION_CHECKLIST_ITEMS
         visible_latest = latest
     return {"success": True, "inspection": {"inspection_id": row[0], "operator_email": row[1], "officer_email": row[2], "start_date": row[3], "end_date": row[4], "current_owner": row[5], "role": user["role"], "can_edit": row[4] is None and row[5] == user["role"], "questions": visible_questions, "latest": visible_latest, "audit_log": visible_audit_log}}
 
@@ -320,7 +322,7 @@ def save_inspection(inspection_id: int, request: Request, data: SaveInspectionRe
     changed = False
     now = datetime.now().astimezone().isoformat()
     for question_id, answer in data.answers.items():
-        if question_id not in INSPECTION_QUESTIONS:
+        if question_id not in INSPECTION_CHECKLIST_ITEMS:
             continue
         requested_update = answer.update.strip().lower()
         comment = answer.comment.strip()
@@ -352,8 +354,8 @@ def save_inspection(inspection_id: int, request: Request, data: SaveInspectionRe
     audit_log.append(latest)
     end_date = None
     if user["role"] == "officer":
-        has_blank = any(not isinstance(latest.get(question_id), dict) or len(latest.get(question_id, {})) == 0 for question_id in INSPECTION_QUESTIONS)
-        has_pending = any(isinstance(latest.get(question_id), dict) and latest.get(question_id, {}).get("update") == "pending" for question_id in INSPECTION_QUESTIONS)
+        has_blank = any(not isinstance(latest.get(question_id), dict) or len(latest.get(question_id, {})) == 0 for question_id in INSPECTION_CHECKLIST_ITEMS)
+        has_pending = any(isinstance(latest.get(question_id), dict) and latest.get(question_id, {}).get("update") == "pending" for question_id in INSPECTION_CHECKLIST_ITEMS)
         if has_blank:
             new_owner = "officer"
         elif has_pending:
@@ -362,7 +364,7 @@ def save_inspection(inspection_id: int, request: Request, data: SaveInspectionRe
             new_owner = None
             end_date = datetime.now().astimezone().isoformat()
     else:
-        pending_question_ids = [question_id for question_id in INSPECTION_QUESTIONS if isinstance(previous.get(question_id), dict) and previous.get(question_id, {}).get("update") == "pending"]
+        pending_question_ids = [question_id for question_id in INSPECTION_CHECKLIST_ITEMS if isinstance(previous.get(question_id), dict) and previous.get(question_id, {}).get("update") == "pending"]
         operator_responded_to_all = all(isinstance(latest.get(question_id), dict) and latest.get(question_id, {}).get("update") == "pending" and latest.get(question_id, {}).get("updated_by") == "operator" for question_id in pending_question_ids)
         new_owner = "officer" if operator_responded_to_all else "operator"
     cur.execute("UPDATE inspections SET checklist_form_json = ?, current_owner = ?, end_date = ? WHERE inspection_id = ?", (json.dumps(audit_log), new_owner, end_date, inspection_id))
