@@ -33,17 +33,17 @@ type DraftAnswer = {
   mime: string;
   base64: string;
 };
-const FILE_MARKER = "⟦FILE⟧";
-const TYPE_MARKER = "⟦TYPE⟧";
-const DATA_MARKER = "⟦DATA⟧";
+const FILE_MARKER = '⟦FILE⟧';
+const TYPE_MARKER = '⟦TYPE⟧';
+const DATA_MARKER = '⟦DATA⟧';
 
 function parseComment(raw: string) {
   if (!raw.includes(FILE_MARKER)) {
     return {
       text: raw,
-      filename: "",
-      mime: "",
-      data: ""
+      filename: '',
+      mime: '',
+      data: '',
     };
   }
 
@@ -55,50 +55,39 @@ function parseComment(raw: string) {
     text: raw.substring(0, fileIndex).trim(),
     filename: raw.substring(fileIndex + FILE_MARKER.length, typeIndex).trim(),
     mime: raw.substring(typeIndex + TYPE_MARKER.length, dataIndex).trim(),
-    data: raw.substring(dataIndex + DATA_MARKER.length).trim()
+    data: raw.substring(dataIndex + DATA_MARKER.length).trim(),
   };
 }
 
-function buildComment(
-  text: string,
-  filename: string,
-  mime: string,
-  data: string
-) {
-  if (!filename)
-    return text;
+function buildComment(text: string, filename: string, mime: string, data: string) {
+  if (!filename) return text;
 
   return (
     text.trim() +
-    "\n\n" +
+    '\n\n' +
     FILE_MARKER +
     filename +
-    "\n" +
+    '\n' +
     TYPE_MARKER +
     mime +
-    "\n" +
+    '\n' +
     DATA_MARKER +
     data
   );
 }
 
-function downloadAttachment(
-  filename: string,
-  mime: string,
-  base64: string
-) {
+function downloadAttachment(filename: string, mime: string, base64: string) {
   const binary = atob(base64);
 
   const bytes = new Uint8Array(binary.length);
 
-  for (let i = 0; i < binary.length; i++)
-    bytes[i] = binary.charCodeAt(i);
+  for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
 
   const blob = new Blob([bytes], { type: mime });
 
   const url = URL.createObjectURL(blob);
 
-  const a = document.createElement("a");
+  const a = document.createElement('a');
 
   a.href = url;
   a.download = filename;
@@ -129,35 +118,29 @@ export default function Inspection() {
     const loadedInspection: InspectionData = data.inspection;
     const nextDraft: Record<string, DraftAnswer> = {};
 
-Object.keys(loadedInspection.questions).forEach((questionId) => {
+    Object.keys(loadedInspection.questions).forEach((questionId) => {
+      const latestAnswer = loadedInspection.latest[questionId] || {};
 
-  const latestAnswer = loadedInspection.latest[questionId] || {};
+      const parsed = parseComment(latestAnswer.comment || '');
 
-  const parsed = parseComment(latestAnswer.comment || "");
-
-  if (loadedInspection.role === "operator" && !loadedInspection.end_date) {
-
-    nextDraft[questionId] = {
-      update: "pending",
-      comment: "",
-      filename: "",
-      mime: "",
-      base64: ""
-    };
-
-  } else {
-
-    nextDraft[questionId] = {
-      update: latestAnswer.update || "",
-      comment: parsed.text,
-      filename: parsed.filename,
-      mime: parsed.mime,
-      base64: parsed.data
-    };
-
-  }
-
-});
+      if (loadedInspection.role === 'operator' && !loadedInspection.end_date) {
+        nextDraft[questionId] = {
+          update: 'pending',
+          comment: '',
+          filename: '',
+          mime: '',
+          base64: '',
+        };
+      } else {
+        nextDraft[questionId] = {
+          update: latestAnswer.update || '',
+          comment: parsed.text,
+          filename: parsed.filename,
+          mime: parsed.mime,
+          base64: parsed.data,
+        };
+      }
+    });
 
     setInspection(loadedInspection);
     setDraft(nextDraft);
@@ -192,36 +175,36 @@ Object.keys(loadedInspection.questions).forEach((questionId) => {
   const saveInspection = async () => {
     setError('');
 
-  const answers: Record<
-  string,
-  {
-    update: string;
-    comment: string;
-  }
-> = {};
+    const answers: Record<
+      string,
+      {
+        update: string;
+        comment: string;
+      }
+    > = {};
 
-Object.entries(draft).forEach(([questionId, answer]) => {
-  const storedComment = buildComment(
-    answer.comment,
-    answer.filename,
-    answer.mime,
-    answer.base64
-  );
+    Object.entries(draft).forEach(([questionId, answer]) => {
+      const storedComment = buildComment(
+        answer.comment,
+        answer.filename,
+        answer.mime,
+        answer.base64
+      );
 
-  if (inspection?.role === 'operator') {
-    if (answer.comment.trim() || answer.filename) {
-      answers[questionId] = {
-        update: 'pending',
-        comment: storedComment,
-      };
-    }
-  } else if (answer.update) {
-    answers[questionId] = {
-      update: answer.update,
-      comment: storedComment,
-    };
-  }
-});
+      if (inspection?.role === 'operator') {
+        if (answer.comment.trim() || answer.filename) {
+          answers[questionId] = {
+            update: 'pending',
+            comment: storedComment,
+          };
+        }
+      } else if (answer.update) {
+        answers[questionId] = {
+          update: answer.update,
+          comment: storedComment,
+        };
+      }
+    });
 
     const res = await fetch(`/api/inspection/${inspectionId}`, {
       method: 'POST',
@@ -352,39 +335,35 @@ Object.entries(draft).forEach(([questionId, answer]) => {
                                 : entry.update || 'No result'}
                             </div>
 
-                          {(() => {
+                            {(() => {
+                              const parsed = parseComment(entry.comment || '');
 
-  const parsed = parseComment(entry.comment || "");
+                              return (
+                                <>
+                                  {parsed.text && (
+                                    <div className="mt-1 text-sm whitespace-pre-wrap">
+                                      {parsed.text}
+                                    </div>
+                                  )}
 
-  return (
-    <>
-
-      {parsed.text && (
-        <div className="mt-1 text-sm whitespace-pre-wrap">
-          {parsed.text}
-        </div>
-      )}
-
-      {parsed.filename && (
-        <button
-          type="button"
-          className="mt-2 text-blue-600 underline text-sm"
-          onClick={() =>
-            downloadAttachment(
-              parsed.filename,
-              parsed.mime,
-              parsed.data
-            )
-          }
-        >
-          📎 Attached: {parsed.filename}
-        </button>
-      )}
-
-    </>
-  );
-
-})()}
+                                  {parsed.filename && (
+                                    <button
+                                      type="button"
+                                      className="mt-2 text-blue-600 underline text-sm"
+                                      onClick={() =>
+                                        downloadAttachment(
+                                          parsed.filename,
+                                          parsed.mime,
+                                          parsed.data
+                                        )
+                                      }
+                                    >
+                                      📎 Attached: {parsed.filename}
+                                    </button>
+                                  )}
+                                </>
+                              );
+                            })()}
 
                             {entry.date && (
                               <div className="mt-2 text-xs text-slate-400">{entry.date}</div>
@@ -430,93 +409,81 @@ Object.entries(draft).forEach(([questionId, answer]) => {
                         </select>
                       )}
 
-                   <>
-  <textarea
-    className="border p-2 rounded w-full min-h-24"
-    placeholder="Comment"
-    value={answerDraft.comment}
-    onChange={(e) =>
-      setDraft((current) => ({
-        ...current,
-        [questionId]: {
-          ...current[questionId],
-          comment: e.target.value,
-        },
-      }))
-    }
-  />
+                      <>
+                        <textarea
+                          className="border p-2 rounded w-full min-h-24"
+                          placeholder="Comment"
+                          value={answerDraft.comment}
+                          onChange={(e) =>
+                            setDraft((current) => ({
+                              ...current,
+                              [questionId]: {
+                                ...current[questionId],
+                                comment: e.target.value,
+                              },
+                            }))
+                          }
+                        />
 
-  <input
-    type="file"
-    className="border p-2 rounded w-full"
-    onChange={(e) => {
+                        <input
+                          type="file"
+                          className="border p-2 rounded w-full"
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
 
-      const file = e.target.files?.[0];
+                            if (!file) return;
 
-      if (!file)
-        return;
+                            if (file.size > 1024 * 1024) {
+                              alert('Maximum attachment size is 1 MB');
+                              return;
+                            }
 
-      if (file.size > 1024 * 1024) {
-        alert("Maximum attachment size is 1 MB");
-        return;
-      }
+                            const reader = new FileReader();
 
-      const reader = new FileReader();
+                            reader.onload = () => {
+                              const base64 = (reader.result as string).split(',')[1];
 
-      reader.onload = () => {
+                              setDraft((current) => ({
+                                ...current,
+                                [questionId]: {
+                                  ...current[questionId],
+                                  filename: file.name,
+                                  mime: file.type,
+                                  base64: base64,
+                                },
+                              }));
+                            };
 
-        const base64 = (reader.result as string).split(",")[1];
+                            reader.readAsDataURL(file);
+                          }}
+                        />
 
-        setDraft((current) => ({
-          ...current,
-          [questionId]: {
-            ...current[questionId],
-            filename: file.name,
-            mime: file.type,
-            base64: base64,
-          },
-        }));
+                        {answerDraft.filename && (
+                          <div className="text-sm text-slate-600">
+                            📎 Attached: {answerDraft.filename}
+                          </div>
+                        )}
 
-      };
-
-      reader.readAsDataURL(file);
-
-    }}
-  />
-
-  {answerDraft.filename && (
-
-    <div className="text-sm text-slate-600">
-
-      📎 Attached: {answerDraft.filename}
-
-    </div>
-
-  )}
-
-  {answerDraft.filename && (
-
-    <button
-      type="button"
-      className="text-red-600 underline text-sm"
-      onClick={() =>
-        setDraft((current) => ({
-          ...current,
-          [questionId]: {
-            ...current[questionId],
-            filename: "",
-            mime: "",
-            base64: "",
-          },
-        }))
-      }
-    >
-      Remove attachment
-    </button>
-
-  )}
-
-</>
+                        {answerDraft.filename && (
+                          <button
+                            type="button"
+                            className="text-red-600 underline text-sm"
+                            onClick={() =>
+                              setDraft((current) => ({
+                                ...current,
+                                [questionId]: {
+                                  ...current[questionId],
+                                  filename: '',
+                                  mime: '',
+                                  base64: '',
+                                },
+                              }))
+                            }
+                          >
+                            Remove attachment
+                          </button>
+                        )}
+                      </>
                     </div>
                   ) : (
                     <div className="border rounded p-3 bg-slate-100 text-slate-500">
@@ -527,39 +494,29 @@ Object.entries(draft).forEach(([questionId, answer]) => {
                           : latestAnswer.update || 'Not answered'}
                       </div>
 
-                  {(() => {
+                      {(() => {
+                        const parsed = parseComment(latestAnswer.comment || '');
 
-  const parsed = parseComment(latestAnswer.comment || "");
+                        return (
+                          <>
+                            {parsed.text && (
+                              <div className="mt-1 whitespace-pre-wrap">{parsed.text}</div>
+                            )}
 
-  return (
-    <>
-
-      {parsed.text && (
-        <div className="mt-1 whitespace-pre-wrap">
-          {parsed.text}
-        </div>
-      )}
-
-      {parsed.filename && (
-        <button
-          type="button"
-          className="mt-2 text-blue-600 underline"
-          onClick={() =>
-            downloadAttachment(
-              parsed.filename,
-              parsed.mime,
-              parsed.data
-            )
-          }
-        >
-          📎 Attached: {parsed.filename}
-        </button>
-      )}
-
-    </>
-  );
-
-})()}
+                            {parsed.filename && (
+                              <button
+                                type="button"
+                                className="mt-2 text-blue-600 underline"
+                                onClick={() =>
+                                  downloadAttachment(parsed.filename, parsed.mime, parsed.data)
+                                }
+                              >
+                                📎 Attached: {parsed.filename}
+                              </button>
+                            )}
+                          </>
+                        );
+                      })()}
                     </div>
                   )}
                 </section>
