@@ -22,6 +22,8 @@ export default function Home() {
   const [completedSearch, setCompletedSearch] = useState('');
   const [completedCount, setCompletedCount] = useState(0);
 
+  const [inspectionResults, setInspectionResults] = useState<Record<number, 'Pass' | 'Fail'>>({});
+
   useEffect(() => {
     async function checkSession() {
       const res = await fetch('/api/session');
@@ -93,6 +95,9 @@ export default function Home() {
     const data = await res.json();
     setCompletedList(data.inspections);
     setCompletedCount(data.count);
+    await Promise.all(
+      data.inspections.map((insp: any) => fetchInspectionResult(insp.inspection_id))
+    );
   };
 
   // Operator API Calls
@@ -108,6 +113,19 @@ export default function Home() {
     const data = await res.json();
     setCompletedList(data.inspections);
     setCompletedCount(data.count);
+    await Promise.all(
+      data.inspections.map((insp: any) => fetchInspectionResult(insp.inspection_id))
+    );
+  };
+
+  const fetchInspectionResult = async (inspectionId: number) => {
+    const res = await fetch(`/api/inspection/${inspectionId}`);
+    const data = await res.json();
+    const latest = data.inspection.latest;
+    const result = ['1', '2', '3', '4', '5'].every((q) => latest[q]?.update === 'pass')
+      ? 'Pass'
+      : 'Fail';
+    setInspectionResults((prev) => ({ ...prev, [inspectionId]: result }));
   };
 
   return (
@@ -214,8 +232,12 @@ export default function Home() {
                       .filter((insp) =>
                         insp.operator_email?.toLowerCase().includes(inProgressSearch.toLowerCase())
                       )
-                      .map((insp, idx) => (
-                        <div key={idx} className="p-3 border rounded bg-slate-50">
+                      .map((insp) => (
+                        <div
+                          key={insp.inspection_id}
+                          className="p-3 border rounded bg-slate-50 cursor-pointer hover:bg-indigo-50"
+                          onClick={() => void nav(`/inspection/${insp.inspection_id}`)}
+                        >
                           <span className="font-semibold">{insp.operator_email}</span>
                           <div className="text-sm text-slate-500">Started: {insp.start_date}</div>
                         </div>
@@ -242,10 +264,30 @@ export default function Home() {
                       .filter((insp) =>
                         insp.operator_email?.toLowerCase().includes(completedSearch.toLowerCase())
                       )
-                      .map((insp, idx) => (
-                        <option key={idx} value={insp.operator_email} />
+                      .map((insp) => (
+                        <option key={insp.inspection_id} value={insp.operator_email} />
                       ))}
                   </datalist>
+
+                  <div className="max-h-64 overflow-y-auto space-y-2">
+                    {completedList
+                      .filter((insp) =>
+                        insp.operator_email?.toLowerCase().includes(completedSearch.toLowerCase())
+                      )
+                      .map((insp) => (
+                        <div
+                          key={insp.inspection_id}
+                          className="p-3 border rounded bg-slate-50 cursor-pointer hover:bg-indigo-50"
+                          onClick={() => void nav(`/inspection/${insp.inspection_id}`)}
+                        >
+                          <span className="font-semibold">
+                            {insp.operator_email} - {inspectionResults[insp.inspection_id] ?? ''}
+                          </span>
+                          <div className="text-sm text-slate-500">Started: {insp.start_date}</div>
+                          <div className="text-sm text-slate-500">Completed: {insp.end_date}</div>
+                        </div>
+                      ))}
+                  </div>
                 </div>
               )}
             </div>
@@ -275,8 +317,12 @@ export default function Home() {
                     Total In-Progress: {inProgressCount}
                   </div>
                   <div className="max-h-64 overflow-y-auto space-y-2">
-                    {inProgressList.map((insp, idx) => (
-                      <div key={idx} className="p-3 border rounded bg-slate-50">
+                    {inProgressList.map((insp) => (
+                      <div
+                        key={insp.inspection_id}
+                        className="p-3 border rounded bg-slate-50 cursor-pointer hover:bg-indigo-50"
+                        onClick={() => void nav(`/inspection/${insp.inspection_id}`)}
+                      >
                         <span className="font-semibold">{insp.officer_email}</span>
                         <div className="text-sm text-slate-500">Started: {insp.start_date}</div>
                       </div>
@@ -291,9 +337,15 @@ export default function Home() {
                     Total Completed: {completedCount}
                   </div>
                   <div className="max-h-64 overflow-y-auto space-y-2">
-                    {completedList.map((insp, idx) => (
-                      <div key={idx} className="p-3 border rounded bg-slate-50">
-                        <span className="font-semibold">{insp.officer_email}</span>
+                    {completedList.map((insp) => (
+                      <div
+                        key={insp.inspection_id}
+                        className="p-3 border rounded bg-slate-50 cursor-pointer hover:bg-indigo-50"
+                        onClick={() => void nav(`/inspection/${insp.inspection_id}`)}
+                      >
+                        <span className="font-semibold">
+                          {insp.officer_email} - {inspectionResults[insp.inspection_id] ?? ''}
+                        </span>
                         <div className="text-sm text-slate-500">Started: {insp.start_date}</div>
                         <div className="text-sm text-slate-500">Completed: {insp.end_date}</div>
                       </div>
