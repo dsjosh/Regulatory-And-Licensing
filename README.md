@@ -21,9 +21,10 @@ I have used AI for the follwing:
     - AI did surprisingly well for this and I got quality code with only a few revisions.
 
 ## What I would do next
-I have only focused on Use Case 3 (On-Site Assessment & Post-Site Clarification) for this submission. So I would do the following use cases next if I were to do enhancement on this:
- - Use Case 1 (Operator Application Submission & Resubmission)
- - Use Case 2 (Officer Application Review & Feedback)
+- Change the architecture from monolithic to microservice
+- I have only focused on Use Case 3 (On-Site Assessment & Post-Site Clarification) for this submission. So I would do the following use cases next if I were to do enhancement on this:
+  - Use Case 1 (Operator Application Submission & Resubmission)
+  - Use Case 2 (Officer Application Review & Feedback)
 
 ## Pre-requisites (for testing)
 - Install Python 3.14.6
