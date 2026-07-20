@@ -3,10 +3,7 @@
 ## Reasons for choosing this Tech Stack
 
 - Python 3.14.6
-- Node v26.5.0
 - React 19.2.7
-- Vite 8.1.5
-- Typescript
 - Tailwind v4.3.3
 - SQLite 3
 

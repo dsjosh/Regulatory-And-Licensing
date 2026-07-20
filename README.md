@@ -6,10 +6,7 @@ Please refer to "[SCOPE.md](SCOPE.md)" file for the explanation on what I built,
 
 ## Stack
 - Python 3.14.6
-- Node v26.5.0
 - React 19.2.7
-- Vite 8.1.5
-- Typescript
 - Tailwind v4.3.3
 - SQLite 3
 
@@ -28,14 +25,16 @@ I have only focused on Use Case 3 (On-Site Assessment & Post-Site Clarification)
  - Use Case 1 (Operator Application Submission & Resubmission)
  - Use Case 2 (Officer Application Review & Feedback)
 
-## Pre-requisites
+## Pre-requisites (for testing)
 - Install Python 3.14.6
-- Install python packages using the command "pip install -r requirements.txt" inside the backend folder
+- Install python packages using the command "pip install -r requirements.txt" in the backend folder
+- Install Node v26.5.0
+- Install node modules using "npm install" in the frontend folder
 - Create a blank database with application schema using the "create_db.py" in the backend folder
   - Optionally create and fill up "load_db.txt" file using the example file provided in the backend folder to create a database with data
 - Create the "env.txt" file using the example file provided in the backend folder
 
-## Starting the application (for testing)
+## Starting the application
 Just one line - "python .\backend\main.py"
 
 ## Commits
