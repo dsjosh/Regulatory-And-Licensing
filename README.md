@@ -1,5 +1,5 @@
 # Regulatory-And-Licensing
-This is a Regulatory And Licensing (RAL) web application.
+This is a Regulatory And Licensing web application.
 
 ## Scope
 Please refer to "[SCOPE.md](SCOPE.md)" file for the explanation on what I built, what I deferred, and the reasons behind it.
@@ -31,7 +31,7 @@ I have only focused on Use Case 3 (On-Site Assessment & Post-Site Clarification)
 ## Pre-requisites
 - Install Python 3.14.6
 - Install python packages using the command "pip install -r requirements.txt" inside the backend folder
-- Create a blank database with RAL schema using the "create_db.py" in the backend folder
+- Create a blank database with application schema using the "create_db.py" in the backend folder
   - Optionally create and fill up "load_db.txt" file using the example file provided in the backend folder to create a database with data
 - Create the "env.txt" file using the example file provided in the backend folder
 
