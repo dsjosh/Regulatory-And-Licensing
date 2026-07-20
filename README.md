@@ -25,6 +25,8 @@ I have used AI for the follwing:
 - I have only focused on Use Case 3 (On-Site Assessment & Post-Site Clarification) for this submission. So I would do the following use cases next if I were to do enhancement on this:
   - Use Case 1 (Operator Application Submission & Resubmission)
   - Use Case 2 (Officer Application Review & Feedback)
+- Add logging
+- Add unit tests
 
 ## Pre-requisites (for testing)
 - Install Python 3.14.6
