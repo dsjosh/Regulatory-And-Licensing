@@ -7,17 +7,26 @@ Please refer to "[SCOPE.md](SCOPE.md)" file for the explanation on what I built,
 ## Stack
 - Python 3.14.6
 - Node v26.5.0
-- React
-- Vite
+- React 19.2.7
+- Vite 8.1.5
 - Typescript
-- Tailwind v4
+- Tailwind v4.3.3
 - SQLite 3
 
 ## AI Usage
-TODO
+I have used AI for the follwing:
+- Used ChatGPT
+  - Generating the tailwind parts of the code since manual UI adjustment requires a lot of trial-and-error.
+    - Prompts like "I need the username on the navbar for logged-in users"
+    - AI does reduce the trial-and-error needed for UI programming, but there are still errors. For example, the original header in the Home page was cropped. I had to add "leading-normal" class to the css to make it not cropped.
+  - Generating the "create_db.py" because it's for one-time use and technically not part of the application. It's included in the project only so that the testing experience is improved.
+    - Prompts like "I need a Python SQLite database initialization script that recreates the database, imports SQL from a seed file, and logs each step."
+    - AI did surprisingly well for this and I got quality code with only a few revisions.
 
 ## What I would do next
-TODO
+I have only focused on Use Case 3 (On-Site Assessment & Post-Site Clarification) for this submission. So I would do the following use cases next if I were to do enhancement on this:
+ - Use Case 1 (Operator Application Submission & Resubmission)
+ - Use Case 2 (Officer Application Review & Feedback)
 
 ## Pre-requisites
 - Install Python 3.14.6
@@ -26,13 +35,13 @@ TODO
   - Optionally create and fill up "load_db.txt" file using the example file provided in the backend folder to create a database with data
 - Create the "env.txt" file using the example file provided in the backend folder
 
-## Starting the application
+## Starting the application (for testing)
 Just one line - "python .\backend\main.py"
 
 ## Commits
-Do a "npm run format" in the frontend folder at the end of every frontend change commit
+Do a "npm run format" in the frontend folder at the end of every frontend change commit to beautify code.
 
-## Deployment
+## Deployment (for prod, not for testing)
 Before starting the deployment pipeline, do the following in a staging folder on the preprod machine:
 - Copy over the entire code to the staging folder
 - In the staging frontend folder, do a "npm run build" inside
